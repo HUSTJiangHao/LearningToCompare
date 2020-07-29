@@ -40,7 +40,7 @@ def omniglot_character_folders():
     return metatrain_character_folders, metaval_character_folders
 
 
-# 一个训练/测试任务
+# 一个训练/测试任务  包含训练集S 5个不同类型的样本 和Q 19*5个样本 中样例的路径 以及对应的标签
 class OmniglotTask(object):
     def __init__(self, character_folders, num_classes, train_num,test_num):
 
@@ -75,3 +75,83 @@ class OmniglotTask(object):
         # print(*sample.split('\\'))
         # print(os.path.join(*sample.split('\\')[:-1]))
         return os.path.join(*sample.split('\\')[:-1])
+
+
+# 从一个task中 创建dataset
+class FewShotDataset(Dataset):
+
+    def __init__(self, task, split='train', transform=None, target_transform=None):
+        self.transform = transform # Torch operations on the input image
+        self.target_transform = target_transform
+        self.task = task
+        self.split = split
+        self.image_roots = self.task.train_roots if self.split == 'train' else self.task.test_roots
+        self.labels = self.task.train_labels if self.split == 'train' else self.task.test_labels
+
+    def __len__(self):
+        return len(self.image_roots)
+
+    def __getitem__(self, idx):
+        raise NotImplementedError("This is an abstract class. Subclass this class for your particular dataset.")
+
+
+# dataset
+class Omniglot(FewShotDataset):
+
+    def __init__(self, *args, **kwargs):
+        super(Omniglot, self).__init__(*args, **kwargs)
+
+    def __getitem__(self, idx):
+        image_root = self.image_roots[idx]
+        image = Image.open(image_root)
+        image = image.convert('L')  # 灰度图像
+        image = image.resize((28,28), resample=Image.LANCZOS)
+
+        if self.transform is not None:
+            image = self.transform(image)
+        label = self.labels[idx]
+        if self.target_transform is not None:
+            label = self.target_transform(label)
+        return image, label
+
+
+# 自定义采样方式
+class ClassBalancedSampler(Sampler):
+    ''' Samples 'num_inst' examples each from 'num_cl' pools
+        of examples of size 'num_per_class' '''
+
+    def __init__(self, num_per_class, num_cl, num_inst,shuffle=True):
+        self.num_per_class = num_per_class  # 1shot /19
+        self.num_cl = num_cl # 5shot
+        self.num_inst = num_inst # 每类个数S 1 Q 19
+        self.shuffle = shuffle
+
+    def __iter__(self):
+
+        if self.shuffle:
+            batch = [[i+j*self.num_inst for i in torch.randperm(self.num_inst)[:self.num_per_class]] for j in range(self.num_cl)]
+        else:
+            batch = [[i+j*self.num_inst for i in range(self.num_inst)[:self.num_per_class]] for j in range(self.num_cl)]
+        batch = [item for sublist in batch for item in sublist]
+
+        if self.shuffle:
+            random.shuffle(batch)
+        return iter(batch)
+
+    def __len__(self):
+        return 1
+
+
+def get_data_loader(task, num_per_class=1, split='train',shuffle=True,rotation=0):
+    # NOTE: batch size here is # instances PER CLASS
+    # normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
+    normalize = transforms.Normalize(mean=[ 0.92206], std=[ 0.08426])
+    dataset = Omniglot(task,split=split,transform=transforms.Compose([Rotate(rotation),transforms.ToTensor(),normalize]))
+
+    if split == 'train':
+        sampler = ClassBalancedSampler(num_per_class, task.num_classes, task.train_num,shuffle=shuffle)
+    else:
+        sampler = ClassBalancedSampler(num_per_class, task.num_classes, task.test_num,shuffle=shuffle)
+    loader = DataLoader(dataset, batch_size=num_per_class*task.num_classes, sampler=sampler)
+
+    return loader
