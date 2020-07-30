@@ -127,7 +127,7 @@ class ClassBalancedSampler(Sampler):
         self.shuffle = shuffle
 
     def __iter__(self):
-
+  # 在 num_inst个中选出 num_per_class个样本
         if self.shuffle:
             batch = [[i+j*self.num_inst for i in torch.randperm(self.num_inst)[:self.num_per_class]] for j in range(self.num_cl)]
         else:
