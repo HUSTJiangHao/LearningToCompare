@@ -162,14 +162,17 @@ def main():
         # calculate relations
         # each batch sample link to every samples to calculate relations
         # to form a 100x128 matrix for relation network
-        sample_features_ext = sample_features.unsqueeze(0).repeat(BATCH_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
-        batch_features_ext = batch_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
-        batch_features_ext = torch.transpose(batch_features_ext,0,1)
+        sample_features_ext = sample_features.unsqueeze(0).repeat(BATCH_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)  # [95, 5, 64, 5, 5]
+        batch_features_ext = batch_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)  # [5, 95, 64, 5, 5]
+        batch_features_ext = torch.transpose(batch_features_ext,0,1)  # [95, 5, 64, 5, 5]
 
-        relation_pairs = torch.cat((sample_features_ext,batch_features_ext),2).view(-1,FEATURE_DIM*2,5,5)
-        relations = relation_network(relation_pairs).view(-1,CLASS_NUM)
+        relation_pairs = torch.cat((sample_features_ext,batch_features_ext),2).view(-1,FEATURE_DIM*2,5,5)  # 深度方向上连接 [95, 5, 128, 5, 5] -> [475, 128, 5, 5]
+        relations = relation_network(relation_pairs).view(-1,CLASS_NUM)  # [95,5]  95个Q样例，每个输出5个置信度值
 
         mse = nn.MSELoss().cuda(GPU)
+
+
+        # one_hot_labels 和 relations进行MSE运算
         one_hot_labels = Variable(torch.zeros(BATCH_NUM_PER_CLASS*CLASS_NUM, CLASS_NUM).scatter_(1, batch_labels.view(-1,1).long(), 1)).cuda(GPU)
         loss = mse(relations,one_hot_labels)
 
