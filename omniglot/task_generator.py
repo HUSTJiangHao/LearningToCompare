@@ -107,11 +107,14 @@ class Omniglot(FewShotDataset):
         image = image.convert('L')  # 灰度图像
         image = image.resize((28,28), resample=Image.LANCZOS)
 
+
         if self.transform is not None:
             image = self.transform(image)
         label = self.labels[idx]
         if self.target_transform is not None:
             label = self.target_transform(label)
+
+
         return image, label
 
 
