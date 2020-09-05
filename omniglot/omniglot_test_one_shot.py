@@ -22,7 +22,7 @@ EPISODE = 1000000
 TEST_EPISODE = 1000
 LEARNING_RATE = 0.001
 GPU = 0
-HIDDEN_UNIT = 10
+# HIDDEN_UNIT = 10
 
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0*np.array(data)
@@ -84,7 +84,7 @@ class RelationNetwork(nn.Module):
         out = self.layer2(out)
         out = out.view(out.size(0),-1)
         out = F.relu(self.fc1(out))
-        out = F.sigmoid(self.fc2(out))
+        out = torch.sigmoid(self.fc2(out))
         return out
 
 def weights_init(m):

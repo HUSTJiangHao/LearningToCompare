@@ -21,7 +21,7 @@ EPISODE = 1000000
 TEST_EPISODE = 1000
 LEARNING_RATE = 0.001
 GPU = 0
-HIDDEN_UNIT = 10
+# HIDDEN_UNIT = 10
 
 
 # 特征提取层f(x)
@@ -80,7 +80,7 @@ class RelationNetwork(nn.Module):
         out = self.layer2(out)
         out = out.view(out.size(0),-1)   # 得到输入图片提取的特征向量 输入全连接层 [475, 64]
         out = F.relu(self.fc1(out)) # [475, 8]
-        out = F.sigmoid(self.fc2(out))
+        out = torch.sigmoid(self.fc2(out))
         return out
 
 def weights_init(m):
@@ -184,8 +184,8 @@ def main():
 
         loss.backward()
 
-        torch.nn.utils.clip_grad_norm(feature_encoder.parameters(),0.5)
-        torch.nn.utils.clip_grad_norm(relation_network.parameters(),0.5)
+        torch.nn.utils.clip_grad_norm_(feature_encoder.parameters(),0.5)
+        torch.nn.utils.clip_grad_norm_(relation_network.parameters(),0.5)
 
         feature_encoder_optim.step()
         relation_network_optim.step()
