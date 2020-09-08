@@ -131,3 +131,5 @@ dmypy.json
 
 datas/
 .idea/
+.idea/misc.xml
+.idea/LearningToCompare.iml
