@@ -118,63 +118,51 @@ def main():
     feature_encoder.cuda(GPU)
     relation_network.cuda(GPU)
 
-    feature_encoder_optim = torch.optim.Adam(feature_encoder.parameters(),lr=LEARNING_RATE)
-    feature_encoder_scheduler = StepLR(feature_encoder_optim,step_size=100000,gamma=0.5)
-    relation_network_optim = torch.optim.Adam(relation_network.parameters(),lr=LEARNING_RATE)
-    relation_network_scheduler = StepLR(relation_network_optim,step_size=100000,gamma=0.5)
+    # if os.path.exists(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
+    #     feature_encoder.load_state_dict(torch.load(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
+    #     print("load feature encoder success")
+    # if os.path.exists(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
+    #     relation_network.load_state_dict(torch.load(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
+    #     print("load relation network success")
 
-    if os.path.exists(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
-        feature_encoder.load_state_dict(torch.load(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
-        print("load feature encoder success")
-    if os.path.exists(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
-        relation_network.load_state_dict(torch.load(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
-        print("load relation network success")
-
-    total_accuracy = 0.0
-    for episode in range(EPISODE):
+    image_folders = []  # 每个文件夹包含一种字符
+    folderIndexs = np.random.randint(0, len(metatest_character_folders), 5)
+    for i in folderIndexs:
+        image_folders.append(metatest_character_folders[i])
 
 
-            # test
-            print("Testing...")
-            total_rewards = 0
-            accuracies = []
-            for i in range(TEST_EPISODE):
-                degrees = random.choice([0,90,180,270])
-                task = tg.OmniglotTask(metatest_character_folders,CLASS_NUM,SAMPLE_NUM_PER_CLASS,SAMPLE_NUM_PER_CLASS,)
-                sample_dataloader = tg.get_data_loader(task,num_per_class=SAMPLE_NUM_PER_CLASS,split="train",shuffle=False,rotation=degrees)
-                test_dataloader = tg.get_data_loader(task,num_per_class=SAMPLE_NUM_PER_CLASS,split="test",shuffle=True,rotation=degrees)
+    train_image_root = [os.path.join(fold,  os.listdir(fold)[i]).replace("\\", "/") for fold in image_folders for i in np.random.randint(0,19,2)]
+    query_image_root = train_image_root[::2]
+    train_image_root = train_image_root[1::2]
 
-                sample_images,sample_labels = sample_dataloader.__iter__().next()
-                test_images,test_labels = test_dataloader.__iter__().next()
 
-                # calculate features
-                sample_features = feature_encoder(Variable(sample_images).cuda(GPU)) # 5x64
-                test_features = feature_encoder(Variable(test_images).cuda(GPU)) # 20x64
 
-                # calculate relations
-                # each batch sample link to every samples to calculate relations
-                # to form a 100x128 matrix for relation network
-                sample_features_ext = sample_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
-                test_features_ext = test_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
-                test_features_ext = torch.transpose(test_features_ext,0,1)
 
-                relation_pairs = torch.cat((sample_features_ext,test_features_ext),2).view(-1,FEATURE_DIM*2,5,5)
-                relations = relation_network(relation_pairs).view(-1,CLASS_NUM)
+    image = Image.open(image_root)
+    image = image.convert('L')  # 灰度图像
+    image = image.resize((28, 28), resample=Image.LANCZOS)
 
-                _,predict_labels = torch.max(relations.data,1)
 
-                rewards = [1 if predict_labels[j]==test_labels[j] else 0 for j in range(CLASS_NUM)]
 
-                total_rewards += np.sum(rewards)
-                accuracy = np.sum(rewards)/1.0/CLASS_NUM/SAMPLE_NUM_PER_CLASS
-                accuracies.append(accuracy)
+    # calculate features
+    sample_features = feature_encoder(Variable(sample_images).cuda(GPU)) # 5x64
+    test_features = feature_encoder(Variable(test_images).cuda(GPU)) # 20x64
 
-            test_accuracy,h = mean_confidence_interval(accuracies)
+    # calculate relations
+    # each batch sample link to every samples to calculate relations
+    # to form a 100x128 matrix for relation network
+    sample_features_ext = sample_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
+    test_features_ext = test_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
+    test_features_ext = torch.transpose(test_features_ext,0,1)
 
-            print("test accuracy:",test_accuracy,"h:",h)
-            total_accuracy += test_accuracy
+    relation_pairs = torch.cat((sample_features_ext,test_features_ext),2).view(-1,FEATURE_DIM*2,5,5)
+    relations = relation_network(relation_pairs).view(-1,CLASS_NUM)
 
-    print("aver_accuracy:",total_accuracy/EPISODE)
+    _,predict_labels = torch.max(relations.data,1)
+
+
+
+
 
 
 
