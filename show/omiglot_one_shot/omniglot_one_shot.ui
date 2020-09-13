@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>755</width>
+    <height>707</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ominiglot_one_shot</string>
+  </property>
+  <widget class="QPlainTextEdit" name="TextEdit">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>440</y>
+     <width>731</width>
+     <height>201</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>731</width>
+     <height>341</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="train_img1">
+        <property name="text">
+         <string>样例图片1</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="train_img2">
+        <property name="text">
+         <string>样例图片2</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="train_img3">
+        <property name="text">
+         <string>样例图片3</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="train_img4">
+        <property name="text">
+         <string>样例图片4</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="train_img5">
+        <property name="text">
+         <string>样例图片5</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="test_img1">
+        <property name="text">
+         <string>测试图片1</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="test_img2">
+        <property name="text">
+         <string>测试图片2</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="test_img3">
+        <property name="text">
+         <string>测试图片3</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="test_img4">
+        <property name="text">
+         <string>测试图片4</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="test_img5">
+        <property name="text">
+         <string>测试图片5</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="button_multi_show">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>650</y>
+     <width>131</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>多批演示</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="button_select_folds">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>650</y>
+     <width>171</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>选择样例图片文件夹</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="button_load_model">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>650</y>
+     <width>151</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>加载模型文件</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="button_single_show">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>650</y>
+     <width>111</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>单张演示</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="button_clear">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>650</y>
+     <width>101</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>重新选择</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_trainclass">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>731</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>class：  0                 1                 2                  3                 4</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_testclass">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>400</y>
+     <width>731</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>class：</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

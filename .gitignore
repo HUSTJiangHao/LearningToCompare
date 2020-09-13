@@ -134,3 +134,5 @@ datas/
 .idea/misc.xml
 .idea/LearningToCompare.iml
 .idea/misc.xml
+show/models/omniglot_relation_network_5way_1shot.pkl
+show/models/omniglot_feature_encoder_5way_1shot.pkl
