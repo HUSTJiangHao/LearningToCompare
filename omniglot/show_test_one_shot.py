@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
+import torchvision.transforms as transforms
 import numpy as np
 import task_generator as tg
 import os
@@ -11,6 +12,7 @@ import argparse
 import random
 import scipy as sp
 import scipy.stats
+from PIL import Image
 
 # Hyper Parameters
 FEATURE_DIM = 64  # 论文使用64层提取特征
@@ -22,6 +24,7 @@ EPISODE = 1000000
 TEST_EPISODE = 1000
 LEARNING_RATE = 0.001
 GPU = 0
+TEST_NUMS = 5
 # HIDDEN_UNIT = 10
 
 def mean_confidence_interval(data, confidence=0.95):
@@ -118,12 +121,12 @@ def main():
     feature_encoder.cuda(GPU)
     relation_network.cuda(GPU)
 
-    # if os.path.exists(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
-    #     feature_encoder.load_state_dict(torch.load(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
-    #     print("load feature encoder success")
-    # if os.path.exists(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
-    #     relation_network.load_state_dict(torch.load(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
-    #     print("load relation network success")
+    if os.path.exists(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
+        feature_encoder.load_state_dict(torch.load(str("./models/omniglot_feature_encoder_" + str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
+        print("load feature encoder success")
+    if os.path.exists(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")):
+        relation_network.load_state_dict(torch.load(str("./models/omniglot_relation_network_"+ str(CLASS_NUM) +"way_" + str(SAMPLE_NUM_PER_CLASS) +"shot.pkl")))
+        print("load relation network success")
 
     image_folders = []  # 每个文件夹包含一种字符
     folderIndexs = np.random.randint(0, len(metatest_character_folders), 5)
@@ -131,16 +134,38 @@ def main():
         image_folders.append(metatest_character_folders[i])
 
 
-    train_image_root = [os.path.join(fold,  os.listdir(fold)[i]).replace("\\", "/") for fold in image_folders for i in np.random.randint(0,19,2)]
-    query_image_root = train_image_root[::2]
-    train_image_root = train_image_root[1::2]
+    train_image_root = [os.path.join(fold,  os.listdir(fold)[i]).replace("\\", "/") for fold in image_folders for i in np.random.randint(0,19,1)]
+    query_image_root = [os.path.join(fold, os.listdir(fold)[i]).replace("\\", "/") for fold in image_folders for i in range(20)]
 
+    query_image_root = list(set(query_image_root) - set(train_image_root))
 
+    query = [query_image_root[i] for i in np.random.randint(0,94,TEST_NUMS)]
+    query_image_root = query
 
+    sample_images = torch.zeros(5,1,28,28)
+    test_images = torch.zeros(TEST_NUMS,1,28,28)
 
-    image = Image.open(image_root)
-    image = image.convert('L')  # 灰度图像
-    image = image.resize((28, 28), resample=Image.LANCZOS)
+    for i in range(5):
+        image = Image.open(train_image_root[i])
+        image = image.convert('L')  # 灰度图像
+        image = image.resize((28, 28), resample=Image.LANCZOS)
+
+        normalize = transforms.Normalize(mean=[0.92206], std=[0.08426])
+        transform = transforms.Compose([transforms.ToTensor(), normalize])
+        image = transform(image)
+
+        sample_images[i] = image
+
+    for i in range(TEST_NUMS):
+        image = Image.open(query_image_root[i])
+        image = image.convert('L')  # 灰度图像
+        image = image.resize((28, 28), resample=Image.LANCZOS)
+
+        normalize = transforms.Normalize(mean=[0.92206], std=[0.08426])
+        transform = transforms.Compose([transforms.ToTensor(), normalize])
+        image = transform(image)
+
+        test_images[i] = image
 
 
 
@@ -151,7 +176,8 @@ def main():
     # calculate relations
     # each batch sample link to every samples to calculate relations
     # to form a 100x128 matrix for relation network
-    sample_features_ext = sample_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
+    # sample_features_ext = sample_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
+    sample_features_ext = sample_features.unsqueeze(0).repeat(TEST_NUMS, 1, 1, 1, 1)
     test_features_ext = test_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
     test_features_ext = torch.transpose(test_features_ext,0,1)
 
@@ -159,7 +185,7 @@ def main():
     relations = relation_network(relation_pairs).view(-1,CLASS_NUM)
 
     _,predict_labels = torch.max(relations.data,1)
-
+    print(" ")
 
 
 

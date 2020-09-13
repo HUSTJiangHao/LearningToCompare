@@ -1,14 +1,13 @@
 # 此文件用于生成训练任务
 
 import torchvision
-import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torch
 from torch.utils.data import DataLoader, Dataset
 import random
 import os
 from PIL import Image
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data.sampler import Sampler
 
@@ -110,6 +109,7 @@ class Omniglot(FewShotDataset):
 
         if self.transform is not None:
             image = self.transform(image)
+            print("   ")
         label = self.labels[idx]
         if self.target_transform is not None:
             label = self.target_transform(label)
