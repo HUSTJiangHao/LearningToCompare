@@ -109,7 +109,7 @@ class Omniglot(FewShotDataset):
 
         if self.transform is not None:
             image = self.transform(image)
-            print("   ")
+            #print("   ")
         label = self.labels[idx]
         if self.target_transform is not None:
             label = self.target_transform(label)

@@ -86,9 +86,9 @@ class Show_widget:
 
 
         query_image_root = [list(set(query_image_root[i]) - set(train_image_root[i])) for i in range(5)]
-        # query = [query_image_root[i] for i in np.random.randint(0, 94, TEST_NUMS)]
+        query = query_image_root[0] + query_image_root[1] + query_image_root[2] + query_image_root[3] + query_image_root[4]
 
-        self.query_image_root = query_image_root
+        self.query_image_root = query
         self.train_image_root = train_image_root
 
         for i in range(5):
@@ -124,20 +124,21 @@ class Show_widget:
 
     def on_batch_show(self):
 
-        sample_images = torch.zeros(5, 1, 28, 28)
-        test_images = torch.zeros(TEST_NUMS, 1, 28, 28)
+        sample_images = torch.zeros(25, 1, 28, 28)
+        test_images = torch.zeros(5, 1, 28, 28)
         for i in range(5):
-            image = Image.open(self.train_image_root[i])
-            image = image.convert('L')  # 灰度图像
-            image = image.resize((28, 28), resample=Image.LANCZOS)
+            for j in range(5):
+                image = Image.open(self.train_image_root[i][j])
+                image = image.convert('L')  # 灰度图像
+                image = image.resize((28, 28), resample=Image.LANCZOS)
 
-            normalize = transforms.Normalize(mean=[0.92206], std=[0.08426])
-            transform = transforms.Compose([transforms.ToTensor(), normalize])
-            image = transform(image)
+                normalize = transforms.Normalize(mean=[0.92206], std=[0.08426])
+                transform = transforms.Compose([transforms.ToTensor(), normalize])
+                image = transform(image)
 
-            sample_images[i] = image
+                sample_images[i*5 + j] = image
 
-        random_indexs = np.random.randint(0, 94, 5)
+        random_indexs = np.random.randint(0, 75, 5)
         for i in range(5):
             image = Image.open(self.query_image_root[random_indexs[i]])
             image = image.convert('L')  # 灰度图像
@@ -150,27 +151,27 @@ class Show_widget:
             test_images[i] = image
 
         for i in range(5):
-            image = QtGui.QPixmap(self.query_image_root[random_indexs[i]]).scaled(self.ui.train_img1.width(),
-                                                                                  self.ui.train_img1.height())
+            image = QtGui.QPixmap(self.query_image_root[random_indexs[i]]).scaled(self.ui.test_1.width(),
+                                                                                  self.ui.test_1.height())
             self.pix_query_images[i].setPixmap(image)
 
-        # calculate features
-        sample_features = self.feature_encoder(Variable(sample_images).cuda(GPU))  # 5x64
-        test_features = self.feature_encoder(Variable(test_images).cuda(GPU))  # 20x64
+        sample_features = self.feature_encoder(Variable(sample_images).cuda(GPU))  # 5x64*5*5
+        sample_features = sample_features.view(CLASS_NUM, SAMPLE_NUM_PER_CLASS, FEATURE_DIM, 5, 5)
+        sample_features = torch.sum(sample_features, 1).squeeze(1)
+        batch_features = self.feature_encoder(Variable(test_images).cuda(GPU))  # 20x64*5*5
 
         # calculate relations
         # each batch sample link to every samples to calculate relations
         # to form a 100x128 matrix for relation network
-        # sample_features_ext = sample_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
-        sample_features_ext = sample_features.unsqueeze(0).repeat(TEST_NUMS, 1, 1, 1, 1)
-        test_features_ext = test_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS * CLASS_NUM, 1, 1, 1, 1)
-        test_features_ext = torch.transpose(test_features_ext, 0, 1)
+        sample_features_ext = sample_features.unsqueeze(0).repeat(CLASS_NUM, 1, 1, 1, 1)
+        batch_features_ext = batch_features.unsqueeze(0).repeat(CLASS_NUM, 1, 1, 1, 1)
+        batch_features_ext = torch.transpose(batch_features_ext, 0, 1)
 
-        relation_pairs = torch.cat((sample_features_ext, test_features_ext), 2).view(-1, FEATURE_DIM * 2, 5, 5)
+        relation_pairs = torch.cat((sample_features_ext, batch_features_ext), 2).view(-1, FEATURE_DIM * 2, 5, 5)
         relations = self.relation_network(relation_pairs).view(-1, CLASS_NUM)
-
-        _, predict_labels = torch.max(relations.data, 1)
+        predict, predict_labels = torch.max(relations.data, 1)
         predict_labels = predict_labels.cpu().numpy().tolist()
+
         self.ui.label_testclass.setText(
             "class：  " + str(predict_labels[0]) + "                 " + str(predict_labels[1]) +
             "                 " + str(predict_labels[2]) + "                 " + str(predict_labels[3]) +

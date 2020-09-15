@@ -172,11 +172,12 @@ class Show_widget:
         relation_pairs = torch.cat((sample_features_ext, test_features_ext), 2).view(-1, FEATURE_DIM * 2, 5, 5)
         relations = self.relation_network(relation_pairs).view(-1, CLASS_NUM)
 
-        _, predict_labels = torch.max(relations.data, 1)
+        predict, predict_labels = torch.max(relations.data, 1)
         predict_labels = predict_labels.cpu().numpy().tolist()
         self.ui.label_testclass.setText("class：  " + str(predict_labels[0]) + "                 "+ str(predict_labels[1])+
                                         "                 "+ str(predict_labels[2])+"                 "+ str(predict_labels[3])+
                                         "                 "+ str(predict_labels[4]))
+
 
 
 
