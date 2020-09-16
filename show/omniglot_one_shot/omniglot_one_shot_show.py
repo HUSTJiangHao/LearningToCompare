@@ -104,7 +104,7 @@ class Show_widget:
             self.encode_path = fileName[0]
             self.ui.TextEdit.appendPlainText("编码网络模型：" +  fileName[0])
 
-        dialog = QFileDialog(caption="选择关系网络" ,directory = "../models")
+        dialog = QFileDialog(caption="选择关系网络" ,directory = "../models/omniglot_5w1s/")
         if dialog.exec_():
             fileName = dialog.selectedFiles()
             self.relation_path = fileName[0]
