@@ -72,7 +72,7 @@ class MiniImagenetTask(object):
         self.test_labels = [labels[self.get_class(x)] for x in self.test_roots]
 
     def get_class(self, sample):
-        return os.path.join(*sample.split('/')[:-1])
+        return os.path.join(*sample.split('\\')[:-1])
 
 class FewShotDataset(Dataset):
 

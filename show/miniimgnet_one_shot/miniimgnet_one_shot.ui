@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>755</width>
-    <height>707</height>
+    <width>807</width>
+    <height>951</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ominiglot_one_shot</string>
+   <string>miniimgnet</string>
   </property>
   <widget class="QPlainTextEdit" name="TextEdit">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>500</y>
-     <width>731</width>
-     <height>141</height>
+     <y>730</y>
+     <width>781</width>
+     <height>161</height>
     </rect>
    </property>
   </widget>
@@ -28,8 +28,8 @@
     <rect>
      <x>10</x>
      <y>50</y>
-     <width>731</width>
-     <height>441</height>
+     <width>781</width>
+     <height>671</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -202,7 +202,7 @@
    <property name="geometry">
     <rect>
      <x>370</x>
-     <y>650</y>
+     <y>900</y>
      <width>131</width>
      <height>41</height>
     </rect>
@@ -215,7 +215,7 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>650</y>
+     <y>900</y>
      <width>171</width>
      <height>41</height>
     </rect>
@@ -228,7 +228,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>650</y>
+     <y>900</y>
      <width>151</width>
      <height>41</height>
     </rect>
@@ -241,7 +241,7 @@
    <property name="geometry">
     <rect>
      <x>520</x>
-     <y>650</y>
+     <y>900</y>
      <width>111</width>
      <height>41</height>
     </rect>
@@ -253,8 +253,8 @@
   <widget class="QPushButton" name="button_clear">
    <property name="geometry">
     <rect>
-     <x>640</x>
-     <y>650</y>
+     <x>690</x>
+     <y>900</y>
      <width>101</width>
      <height>41</height>
     </rect>
@@ -280,7 +280,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>560</y>
+     <y>810</y>
      <width>21</width>
      <height>31</height>
     </rect>

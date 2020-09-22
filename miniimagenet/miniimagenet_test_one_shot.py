@@ -34,16 +34,16 @@ args = parser.parse_args()
 
 
 # Hyper Parameters
-FEATURE_DIM = args.feature_dim
-RELATION_DIM = args.relation_dim
-CLASS_NUM = args.class_num
+FEATURE_DIM = 64
+RELATION_DIM = 8
+CLASS_NUM = 5
 SAMPLE_NUM_PER_CLASS = 1
-BATCH_NUM_PER_CLASS = args.batch_num_per_class
-EPISODE = args.episode
-TEST_EPISODE = args.test_episode
-LEARNING_RATE = args.learning_rate
-GPU = args.gpu
-HIDDEN_UNIT = args.hidden_unit
+BATCH_NUM_PER_CLASS = 10
+EPISODE = 10
+TEST_EPISODE = 600
+LEARNING_RATE = 0.001
+GPU = 0
+HIDDEN_UNIT = 10
 
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0*np.array(data)
