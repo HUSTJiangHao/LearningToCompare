@@ -60,11 +60,13 @@ class Show_widget:
         self.sample_images = torch.zeros(1)
         self.test_images = torch.zeros(1)
         self.random_indexs = []
+        self.myclass = dict()
 
         self.ui.button_select_folds.clicked.connect(self.on_select_folders)
         self.ui.button_load_model.clicked.connect(self.on_load_model)
         self.ui.button_multi_show.clicked.connect(self.on_batch_show)
         self.ui.button_calc.clicked.connect(self.on_calc)
+        self.ui.button_rechoose.clicked.connect(self.on_rechoose)
 
         self.pix_train_images = [self.ui.train_img1, self.ui.train_img2, self.ui.train_img3, self.ui.train_img4,
                                  self.ui.train_img5]
@@ -74,16 +76,22 @@ class Show_widget:
 
     def on_select_folders(self):
 
+        self.myclass = dict()
+        self.image_folders = []
+
         dialog = QFileDialog(directory="../../datas/miniimagenet/_PNG")
         dialog.setFileMode(QFileDialog.Directory)
 
-        self.image_folders = []
+
         for i in range(5):
             if dialog.exec_():
                 fileName = dialog.selectedFiles()
                 self.image_folders.append(fileName[0])
+                self.myclass[fileName[0].split("/")[-1]] = i
+
                 self.ui.TextEdit.appendPlainText(
                     " class：" + str(i) + "  " + fileName[0].split("/")[-2] + '/' + fileName[0].split("/")[-1])
+
 
         train_image_root = [os.path.join(fold, os.listdir(fold)[i]).replace("\\", "/") for fold in self.image_folders
                             for i
@@ -147,8 +155,11 @@ class Show_widget:
             image = transform(image)
             self.sample_images[i] = image
 
-        self.random_indexs = np.random.randint(0, 94, 5)
+        self.random_indexs = np.random.randint(0, len(self.query_image_root) - 1, 5)
+
+        batch_class = []
         for i in range(5):
+            batch_class.append(self.query_image_root[self.random_indexs[i]].split("/")[-2])
             image = Image.open(self.query_image_root[self.random_indexs[i]])
             image = image.convert('RGB')
             normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
@@ -157,32 +168,13 @@ class Show_widget:
 
             self.test_images[i] = image
 
+        self.ui.TextEdit.appendPlainText("sample: " + str(self.myclass[batch_class[0]]) + "  " + str(self.myclass[batch_class[1]]) + "  " +
+                                         str(self.myclass[batch_class[2]]) + "  " +str(self.myclass[batch_class[3]]) + "  " +str(self.myclass[batch_class[4]]))
         for i in range(5):
             image = QtGui.QPixmap(self.query_image_root[self.random_indexs[i]]).scaled(self.ui.train_img1.width(),
                                                                                        self.ui.train_img1.height())
             self.pix_query_images[0][i].setPixmap(image)
 
-        # # calculate features
-        # sample_features = self.feature_encoder(Variable(sample_images).cuda(GPU))  # 5x64
-        # test_features = self.feature_encoder(Variable(test_images).cuda(GPU))  # 20x64
-        #
-        # # calculate relations
-        # # each batch sample link to every samples to calculate relations
-        # # to form a 100x128 matrix for relation network
-        # # sample_features_ext = sample_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS*CLASS_NUM,1,1,1,1)
-        # sample_features_ext = sample_features.unsqueeze(0).repeat(TEST_NUMS, 1, 1, 1, 1)
-        # test_features_ext = test_features.unsqueeze(0).repeat(SAMPLE_NUM_PER_CLASS * CLASS_NUM, 1, 1, 1, 1)
-        # test_features_ext = torch.transpose(test_features_ext, 0, 1)
-        #
-        # relation_pairs = torch.cat((sample_features_ext, test_features_ext), 2).view(-1, FEATURE_DIM * 2, 5, 5)
-        # relations = self.relation_network(relation_pairs).view(-1, CLASS_NUM)
-        #
-        # predict, predict_labels = torch.max(relations.data, 1)
-        # predict_labels = predict_labels.cpu().numpy().tolist()
-        # self.ui.TextEdit.appendPlainText("计算结果： " + str(predict_labels[0]) + "  "+ str(predict_labels[1]) + "  "+ str(predict_labels[2]) + "  "+ str(predict_labels[3]) + "  "+ str(predict_labels[4]))
-        # # self.ui.label_testclass.setText("class：  " + str(predict_labels[0]) + "                 "+ str(predict_labels[1])+
-        # #                                 "                 "+ str(predict_labels[2])+"                 "+ str(predict_labels[3])+
-        # #                                 "                 "+ str(predict_labels[4]))
 
     def on_calc(self):
         for i in range(5):
@@ -217,6 +209,23 @@ class Show_widget:
             if hindex[predict_labels[i]] == 3:
                 hindex[predict_labels[i]] = 0
 
+    def on_rechoose(self):
+        train_image_root = [os.path.join(fold, os.listdir(fold)[i]).replace("\\", "/") for fold in self.image_folders
+                            for i
+                            in np.random.randint(0, 600, 1)]
+        query_image_root = [os.path.join(fold, os.listdir(fold)[i]).replace("\\", "/") for fold in self.image_folders
+                            for i
+                            in range(600)]
+
+        query_image_root = list(set(query_image_root) - set(train_image_root))
+        # query = [query_image_root[i] for i in np.random.randint(0, 94, TEST_NUMS)]
+
+        self.query_image_root = query_image_root
+        self.train_image_root = train_image_root
+
+        for i in range(5):
+            image = QtGui.QPixmap(train_image_root[i]).scaled(self.ui.train_img1.width(), self.ui.train_img1.height())
+            self.pix_train_images[i].setPixmap(image)
 
 app = QApplication([])
 stats = Show_widget()

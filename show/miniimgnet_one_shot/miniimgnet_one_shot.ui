@@ -208,7 +208,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>随机选取</string>
+    <string>随机选取测试</string>
    </property>
   </widget>
   <widget class="QPushButton" name="button_select_folds">
@@ -240,7 +240,7 @@
   <widget class="QPushButton" name="button_calc">
    <property name="geometry">
     <rect>
-     <x>520</x>
+     <x>680</x>
      <y>900</y>
      <width>111</width>
      <height>41</height>
@@ -250,17 +250,17 @@
     <string>计算</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="button_clear">
+  <widget class="QPushButton" name="button_rechoose">
    <property name="geometry">
     <rect>
-     <x>690</x>
+     <x>520</x>
      <y>900</y>
-     <width>101</width>
+     <width>141</width>
      <height>41</height>
     </rect>
    </property>
    <property name="text">
-    <string>重新选择</string>
+    <string>重新选择原数据</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_trainclass">
