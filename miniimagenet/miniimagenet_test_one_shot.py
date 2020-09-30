@@ -1,11 +1,3 @@
-#-------------------------------------
-# Project: Learning to Compare: Relation Network for Few-Shot Learning
-# Date: 2017.9.21
-# Author: Flood Sung
-# All Rights Reserved
-#-------------------------------------
-
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,18 +11,6 @@ import argparse
 import scipy as sp
 import scipy.stats
 
-parser = argparse.ArgumentParser(description="One Shot Visual Recognition")
-parser.add_argument("-f","--feature_dim",type = int, default = 64)
-parser.add_argument("-r","--relation_dim",type = int, default = 8)
-parser.add_argument("-w","--class_num",type = int, default = 5)
-parser.add_argument("-s","--sample_num_per_class",type = int, default = 1)
-parser.add_argument("-b","--batch_num_per_class",type = int, default = 10)
-parser.add_argument("-e","--episode",type = int, default= 10)
-parser.add_argument("-t","--test_episode", type = int, default = 600)
-parser.add_argument("-l","--learning_rate", type = float, default = 0.001)
-parser.add_argument("-g","--gpu",type=int, default=0)
-parser.add_argument("-u","--hidden_unit",type=int,default=10)
-args = parser.parse_args()
 
 
 # Hyper Parameters
@@ -163,7 +143,7 @@ def main():
                 task = tg.MiniImagenetTask(metatest_folders,CLASS_NUM,1,15)
                 sample_dataloader = tg.get_mini_imagenet_data_loader(task,num_per_class=1,split="train",shuffle=False)
 
-                num_per_class = 3
+                num_per_class = 1
                 test_dataloader = tg.get_mini_imagenet_data_loader(task,num_per_class=num_per_class,split="test",shuffle=True)
                 sample_images,sample_labels = sample_dataloader.__iter__().next()
                 for test_images,test_labels in test_dataloader:

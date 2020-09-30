@@ -17,16 +17,16 @@ import numpy as np
 #import task_generator as tg
 import os
 import math
-import omniglot_few_shot_model as this_model
+import miniimgnet_few_shot_model as this_model
 
 # Hyper Parameters
 FEATURE_DIM = 64
 RELATION_DIM = 8
 CLASS_NUM = 5
 SAMPLE_NUM_PER_CLASS = 5
-BATCH_NUM_PER_CLASS = 15
-EPISODE = 1000000
-TEST_EPISODE = 1000
+BATCH_NUM_PER_CLASS = 10
+EPISODE = 10
+TEST_EPISODE = 600
 LEARNING_RATE = 0.001
 GPU = 0
 HIDDEN_UNIT = 10
@@ -39,7 +39,7 @@ os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 class Show_widget:
 
     def __init__(self):
-        qfile_stats = QFile('omniglot_few_shot.ui')
+        qfile_stats = QFile('miniimgnet_few_shot.ui')
         qfile_stats.open(QFile.ReadOnly)
         qfile_stats.close()
 
@@ -68,7 +68,7 @@ class Show_widget:
 
     def on_select_folders(self):
 
-        dialog = QFileDialog(directory="../../datas/omniglot_resized")
+        dialog = QFileDialog(directory="../../datas/miniimagenet/_PNG")
         dialog.setFileMode(QFileDialog.Directory)
 
         self.image_folders = []
@@ -124,27 +124,26 @@ class Show_widget:
 
     def on_batch_show(self):
 
-        sample_images = torch.zeros(25, 1, 28, 28)
-        test_images = torch.zeros(5, 1, 28, 28)
+        sample_images = torch.zeros(25, 3, 84, 84)
+        test_images = torch.zeros(5, 3, 84, 84)
         for i in range(5):
             for j in range(5):
                 image = Image.open(self.train_image_root[i][j])
-                image = image.convert('L')  # 灰度图像
-                image = image.resize((28, 28), resample=Image.LANCZOS)
+                image = image.convert('RGB')
 
-                normalize = transforms.Normalize(mean=[0.92206], std=[0.08426])
+                normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
                 transform = transforms.Compose([transforms.ToTensor(), normalize])
                 image = transform(image)
 
                 sample_images[i*5 + j] = image
 
-        random_indexs = np.random.randint(0, 75, 5)
+
+        random_indexs = np.random.randint(0, len(self.query_image_root) - 1, 5)
         for i in range(5):
             image = Image.open(self.query_image_root[random_indexs[i]])
-            image = image.convert('L')  # 灰度图像
-            image = image.resize((28, 28), resample=Image.LANCZOS)
+            image = image.convert('RGB')  # 灰度图像
 
-            normalize = transforms.Normalize(mean=[0.92206], std=[0.08426])
+            normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
             transform = transforms.Compose([transforms.ToTensor(), normalize])
             image = transform(image)
 
@@ -155,23 +154,28 @@ class Show_widget:
                                                                                   self.ui.test_1.height())
             self.pix_query_images[i].setPixmap(image)
 
-        sample_features = self.feature_encoder(Variable(sample_images).cuda(GPU))  # 5x64*5*5
-        sample_features = sample_features.view(CLASS_NUM, SAMPLE_NUM_PER_CLASS, FEATURE_DIM, 5, 5)
+        sample_features = self.feature_encoder(Variable(sample_images).cuda(GPU))  # 5x64
+        test_features = self.feature_encoder(Variable(test_images).cuda(GPU))  # 20x64
+
+        # calculate relations
+        sample_features = self.feature_encoder(Variable(sample_images).cuda(GPU))  # 5x64
+        sample_features = sample_features.view(CLASS_NUM, SAMPLE_NUM_PER_CLASS, FEATURE_DIM, 19, 19)
         sample_features = torch.sum(sample_features, 1).squeeze(1)
-        batch_features = self.feature_encoder(Variable(test_images).cuda(GPU))  # 20x64*5*5
+        test_features = self.feature_encoder(Variable(test_images).cuda(GPU))  # 20x64
 
         # calculate relations
         # each batch sample link to every samples to calculate relations
         # to form a 100x128 matrix for relation network
-        sample_features_ext = sample_features.unsqueeze(0).repeat(CLASS_NUM, 1, 1, 1, 1)
-        batch_features_ext = batch_features.unsqueeze(0).repeat(CLASS_NUM, 1, 1, 1, 1)
-        batch_features_ext = torch.transpose(batch_features_ext, 0, 1)
+        sample_features_ext = sample_features.unsqueeze(0).repeat(5, 1, 1, 1, 1)
 
-        relation_pairs = torch.cat((sample_features_ext, batch_features_ext), 2).view(-1, FEATURE_DIM * 2, 5, 5)
+        test_features_ext = test_features.unsqueeze(0).repeat(1 * CLASS_NUM, 1, 1, 1, 1)
+        test_features_ext = torch.transpose(test_features_ext, 0, 1)
+        relation_pairs = torch.cat((sample_features_ext, test_features_ext), 2).view(-1, FEATURE_DIM * 2, 19, 19)
         relations = self.relation_network(relation_pairs).view(-1, CLASS_NUM)
-        predict, predict_labels = torch.max(relations.data, 1)
-        predict_labels = predict_labels.cpu().numpy().tolist()
 
+        _, predict_labels = torch.max(relations.data, 1)
+
+        predict_labels = predict_labels.cpu().numpy().tolist()
         self.ui.label_testclass.setText(
             "class：  " + str(predict_labels[0]) + "                 " + str(predict_labels[1]) +
             "                 " + str(predict_labels[2]) + "                 " + str(predict_labels[3]) +
