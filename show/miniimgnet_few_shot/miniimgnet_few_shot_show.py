@@ -176,10 +176,12 @@ class Show_widget:
         _, predict_labels = torch.max(relations.data, 1)
 
         predict_labels = predict_labels.cpu().numpy().tolist()
-        self.ui.label_testclass.setText(
-            "class：  " + str(predict_labels[0]) + "                 " + str(predict_labels[1]) +
-            "                 " + str(predict_labels[2]) + "                 " + str(predict_labels[3]) +
-            "                 " + str(predict_labels[4]))
+        # self.ui.label_testclass.setText(
+        #     "class：  " + str(predict_labels[0]) + "                 " + str(predict_labels[1]) +
+        #     "                 " + str(predict_labels[2]) + "                 " + str(predict_labels[3]) +
+        #     "                 " + str(predict_labels[4]))
+        self.ui.TextEdit.appendPlainText("计算结果： " + str(predict_labels[0]) + "  " + str(predict_labels[1]) + "  " + str(
+            predict_labels[2]) + "  " + str(predict_labels[3]) + "  " + str(predict_labels[4]))
 
 
 app = QApplication([])
